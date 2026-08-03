@@ -2,6 +2,11 @@
 
 一个无需后端的静态数据看板，用于跟踪全球 PROTAC 药物从研发、开发到商业化的管线进展，并支持每日例行检查和浏览器内手动更新。
 
+## 已部署
+
+- 公开地址：https://annabellehu.github.io/protac-website/
+- 仓库：https://github.com/annabellehu/protac-website
+
 ## 本地运行
 
 直接双击 `index.html` 即可打开。若希望看到服务端自动同步效果，可运行：
