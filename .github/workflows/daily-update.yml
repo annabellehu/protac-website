@@ -1,0 +1,24 @@
+name: Daily PROTAC Pipeline Check
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run daily data update
+        run: node scripts/update-data.mjs --message "每日例行检查"
+      - name: Commit data update
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(data): daily PROTAC pipeline check"
+          file_pattern: "data/*.js data/*.json"

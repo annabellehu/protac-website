@@ -1,0 +1,11 @@
+{
+  "name": "protac-global-pipeline-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "update:data": "node scripts/update-data.mjs",
+    "daily": "node scripts/update-data.mjs --message \"每日例行检查\""
+  }
+}

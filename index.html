@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="跟踪全球 PROTAC 药物研发、开发和商业化管线进展的每日更新数据看板。">
+  <title>PROTAC 全球研发管线追踪</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data/pipeline.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" role="img">
+            <path d="M24 5 39 14v20L24 43 9 34V14L24 5Z" fill="none" stroke="currentColor" stroke-width="2.2"/>
+            <path d="M9 14l15 9 15-9M24 23v20" fill="none" stroke="currentColor" stroke-width="2.2" opacity=".65"/>
+            <circle cx="24" cy="12" r="2.8" fill="currentColor"/>
+            <circle cx="14" cy="20" r="2.3" fill="currentColor"/>
+            <circle cx="34" cy="20" r="2.3" fill="currentColor"/>
+            <circle cx="24" cy="29" r="2.3" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <h1>PROTAC 全球管线追踪</h1>
+          <span>Targeted Protein Degradation Pipeline</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="button button-ghost" id="dailyCheckButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          今日检查
+        </button>
+        <button class="button button-primary" id="openUpdaterButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          手动更新
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="overview panel">
+        <div class="overview-main">
+          <div class="overview-kicker">
+            <span>数据状态</span>
+            <span class="status-chip" id="dataStatusChip">读取中</span>
+          </div>
+          <h2>全球 PROTAC 研发管线总览</h2>
+          <p id="sourceNote"></p>
+          <div class="overview-actions" id="lifecycleButtons"></div>
+        </div>
+        <div class="overview-visual" aria-hidden="true">
+          <svg viewBox="0 0 520 220">
+            <defs>
+              <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#0e7c86"/>
+                <stop offset="1" stop-color="#2f6fed"/>
+              </linearGradient>
+            </defs>
+            <path d="M40 176 C120 44, 205 212, 290 76 S440 52, 490 42" fill="none" stroke="url(#lineGradient)" stroke-width="2.4" opacity=".8"/>
+            <path d="M120 110 156 76 208 102 264 60 324 92 382 58 448 86" fill="none" stroke="#0e7c86" stroke-width="2" stroke-dasharray="4 6" opacity=".65"/>
+            <g fill="#0e7c86">
+              <circle cx="120" cy="110" r="6"/>
+              <circle cx="156" cy="76" r="6"/>
+              <circle cx="208" cy="102" r="6"/>
+              <circle cx="264" cy="60" r="6"/>
+              <circle cx="324" cy="92" r="6"/>
+              <circle cx="382" cy="58" r="6"/>
+              <circle cx="448" cy="86" r="6"/>
+            </g>
+            <g fill="#2f6fed" opacity=".9">
+              <circle cx="264" cy="60" r="12" fill="none" stroke="#2f6fed" stroke-width="2"/>
+              <circle cx="324" cy="92" r="9" fill="none" stroke="#2f6fed" stroke-width="2"/>
+              <circle cx="382" cy="58" r="9" fill="none" stroke="#2f6fed" stroke-width="2"/>
+            </g>
+            <g fill="#111827" font-size="11" font-family="ui-sans-serif, system-ui, sans-serif" opacity=".72">
+              <text x="106" y="132">研发</text>
+              <text x="250" y="42">开发</text>
+              <text x="430" y="112">商业化</text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <section class="metrics-grid" id="metricsGrid"></section>
+
+      <section class="charts-grid">
+        <article class="panel chart-card">
+          <div class="panel-heading">
+            <div>
+              <h3>生命周期分布</h3>
+              <p id="lifecycleSubtitle"></p>
+            </div>
+            <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-4"/><path d="M13 15V7"/><path d="M18 15v-6"/></svg></span>
+          </div>
+          <div id="lifecycleChart" class="bar-list"></div>
+        </article>
+
+        <article class="panel chart-card">
+          <div class="panel-heading">
+            <div>
+              <h3>临床阶段分布</h3>
+              <p id="phaseSubtitle"></p>
+            </div>
+            <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 15v-4"/><path d="M13 15V7"/><path d="M18 15v-6"/></svg></span>
+          </div>
+          <div id="phaseChart" class="phase-chart"></div>
+        </article>
+
+        <article class="panel chart-card">
+          <div class="panel-heading">
+            <div>
+              <h3>地区分布</h3>
+              <p>按公司总部与开发区域归类</p>
+            </div>
+            <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
+          </div>
+          <div id="regionChart" class="bar-list"></div>
+        </article>
+
+        <article class="panel chart-card">
+          <div class="panel-heading">
+            <div>
+              <h3>热门靶点</h3>
+              <p>按当前管线数量排序</p>
+            </div>
+            <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+          </div>
+          <div id="targetChart" class="bar-list"></div>
+        </article>
+      </section>
+
+      <section class="panel timeline-panel">
+        <div class="panel-heading">
+          <div>
+            <h3>最近里程碑</h3>
+            <p>来自已收录管线的公开进展</p>
+          </div>
+          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+        </div>
+        <div id="milestoneList" class="milestone-list"></div>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-heading">
+          <div>
+            <h3>全球管线明细</h3>
+            <p id="tableSubtitle"></p>
+          </div>
+          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></span>
+        </div>
+        <div class="table-toolbar">
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input id="searchInput" type="search" placeholder="搜索药物、企业、靶点、适应症">
+          </label>
+          <select id="filterLifecycle" aria-label="生命周期筛选"></select>
+          <select id="filterPhase" aria-label="阶段筛选"></select>
+          <select id="filterRegion" aria-label="地区筛选"></select>
+          <select id="filterCompany" aria-label="企业筛选"></select>
+          <button class="button button-ghost" id="resetFiltersButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+            重置
+          </button>
+          <span class="result-count" id="resultCount"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>管线</th>
+                <th>企业</th>
+                <th>靶点</th>
+                <th>适应症</th>
+                <th>阶段</th>
+                <th>生命周期</th>
+                <th>地区</th>
+                <th>更新</th>
+                <th class="actions-col">操作</th>
+              </tr>
+            </thead>
+            <tbody id="pipelineTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel updates-panel">
+        <div class="panel-heading">
+          <div>
+            <h3>每日更新记录</h3>
+            <p>自动检查与手动更新都会写入本地记录</p>
+          </div>
+          <span class="panel-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span>
+        </div>
+        <div id="updateLog" class="update-log"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>数据仅供研发信息追踪使用</span>
+      <span id="footerDate"></span>
+    </footer>
+  </div>
+
+  <aside class="drawer" id="updaterDrawer" aria-hidden="true">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <div>
+          <h2>手动更新管线</h2>
+          <p>修改会保存在浏览器本地；导出 JSON 后可提交到站点数据源。</p>
+        </div>
+        <button class="icon-button" id="closeUpdaterButton" type="button" aria-label="关闭更新面板">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="drawer-tools">
+        <button class="button button-secondary" id="newCandidateButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          新增管线
+        </button>
+        <button class="button button-secondary" id="exportDataButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>
+          导出 JSON
+        </button>
+        <button class="button button-secondary" id="importDataButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
+          导入 JSON
+        </button>
+        <button class="button button-secondary" id="resetLocalButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          重置本地修改
+        </button>
+      </div>
+
+      <div class="drawer-layout">
+        <form class="candidate-form" id="candidateForm">
+          <h3 id="formTitle">新增管线</h3>
+          <input type="hidden" id="editId">
+
+          <div class="form-grid">
+            <label>
+              药物代码
+              <input id="fieldCode" required placeholder="例如 KT-621">
+            </label>
+            <label>
+              别名（逗号分隔）
+              <input id="fieldAliases" placeholder="例如 NX-5948">
+            </label>
+            <label class="span-2">
+              企业 / 合作方
+              <input id="fieldCompany" required placeholder="例如 Kymera / Sanofi">
+            </label>
+            <label>
+              国家或地区
+              <input id="fieldCountry" placeholder="例如 美国">
+            </label>
+            <label>
+              靶点
+              <input id="fieldTarget" required placeholder="例如 STAT6">
+            </label>
+            <label class="span-2">
+              适应症
+              <input id="fieldIndication" required placeholder="例如 特应性皮炎">
+            </label>
+            <label>
+              生命周期
+              <select id="fieldLifecycle">
+                <option>研发</option>
+                <option>开发</option>
+                <option>商业化</option>
+                <option>终止</option>
+              </select>
+            </label>
+            <label>
+              阶段
+              <select id="fieldPhase">
+                <option>临床前</option>
+                <option>Phase 1</option>
+                <option>Phase 1/2</option>
+                <option>Phase 2</option>
+                <option>Phase 2/3</option>
+                <option>Phase 3</option>
+                <option>已上市</option>
+              </select>
+            </label>
+            <label>
+              技术类型
+              <select id="fieldModality">
+                <option>PROTAC</option>
+                <option>分子胶降解剂</option>
+                <option>BiDAC</option>
+                <option>BTK 嵌合降解剂</option>
+                <option>其他</option>
+              </select>
+            </label>
+            <label>
+              E3 连接酶
+              <input id="fieldE3" placeholder="CRBN / VHL / 未披露">
+            </label>
+            <label>
+              给药方式
+              <select id="fieldRoute">
+                <option>口服</option>
+                <option>静脉注射</option>
+                <option>局部外用</option>
+                <option>未披露</option>
+              </select>
+            </label>
+            <label>
+              开发区域
+              <input id="fieldRegion" placeholder="例如 全球 / 中国">
+            </label>
+            <label class="span-2">
+              状态
+              <input id="fieldStatus" placeholder="例如 活跃 / 计划进入临床">
+            </label>
+            <label class="span-2">
+              信息来源
+              <input id="fieldSource" placeholder="企业公告 / 会议摘要 / 登记号">
+            </label>
+            <label class="span-2">
+              备注
+              <textarea id="fieldNotes" rows="3" placeholder="临床亮点、合作、风险或关键数据"></textarea>
+            </label>
+            <label class="span-2">
+              里程碑（每行一条：日期 | 标题 | 来源）
+              <textarea id="fieldMilestones" rows="3" placeholder="2026-06-30 | 完成 Phase 2 入组 | 企业公告"></textarea>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button class="button button-primary" type="submit" id="saveCandidateButton">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              保存管线
+            </button>
+            <button class="button button-ghost" type="button" id="cancelEditButton">取消编辑</button>
+          </div>
+        </form>
+
+        <div class="updater-list-wrap">
+          <div class="updater-list-heading">
+            <h3>本地管线</h3>
+            <span id="updaterCount"></span>
+          </div>
+          <div id="updaterList" class="updater-list"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="modal-backdrop" id="detailModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <button class="icon-button modal-close" id="closeDetailButton" type="button" aria-label="关闭详情">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <input type="file" id="importFileInput" accept=".json,application/json" hidden>
+
+  <script src="app.js"></script>
+</body>
+</html>
