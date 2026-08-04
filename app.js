@@ -25,6 +25,27 @@
     "已终止": 8
   };
 
+  const UPDATE_TYPE_LABELS = {
+    initial: "初始数据",
+    daily: "例行检查",
+    "daily-check": "例行检查",
+    "manual-add": "手动新增",
+    "manual-edit": "手动编辑",
+    "manual-delete": "手动删除",
+    import: "导入数据",
+    merge: "数据合并",
+    replace: "数据替换"
+  };
+  const CHANGE_TYPES = new Set([
+    "manual-add",
+    "manual-edit",
+    "manual-delete",
+    "import",
+    "merge",
+    "replace",
+    "initial"
+  ]);
+
   const LIFECYCLE_COLORS = {
     "研发": "var(--blue)",
     "开发": "var(--teal)",
@@ -141,6 +162,23 @@
     return date.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" });
   }
 
+  function updateTypeLabel(type) {
+    return UPDATE_TYPE_LABELS[type] || type || "更新";
+  }
+
+  function logHasChanges(log) {
+    if (typeof log.changed === "boolean") return log.changed;
+    return CHANGE_TYPES.has(log.type || "");
+  }
+
+  function formatDateTime(value) {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    const pad = (num) => String(num).padStart(2, "0");
+    return formatDate(value) + " " + pad(date.getHours()) + ":" + pad(date.getMinutes());
+  }
+
   function slugify(value) {
     return String(value || "")
       .trim()
@@ -174,6 +212,7 @@
   function renderAll() {
     const data = currentData();
     renderMeta(data);
+    renderLatestUpdate(data);
     renderMetrics(data);
     renderLifecycleButtons(data);
     renderLifecycleChart(data);
@@ -201,6 +240,52 @@
       chip.classList.add("stale");
       chip.classList.remove("warning");
     }
+  }
+
+  function renderLatestUpdate(data) {
+    const logs = (data.meta.updateLog || []).slice().sort(function (a, b) {
+      return String(b.date || "").localeCompare(String(a.date || ""));
+    });
+    const today = todayISO();
+    const todayLog = logs.find(function (log) {
+      return (log.date || "") === today;
+    });
+    const latest = logs[0] || null;
+    const panel = $id("latestUpdatePanel");
+    const title = $id("latestUpdateTitle");
+    const meta = $id("latestUpdateMeta");
+    const badge = $id("latestUpdateBadge");
+
+    panel.classList.remove("has-change", "check-only", "no-update");
+
+    if (!logs.length) {
+      panel.classList.add("no-update");
+      title.textContent = "今日暂无更新";
+      badge.textContent = "待更新";
+      meta.textContent = "尚未生成更新记录";
+      return;
+    }
+
+    if (todayLog) {
+      const changed = logHasChanges(todayLog);
+      panel.classList.add(changed ? "has-change" : "check-only");
+      title.textContent = changed
+        ? "今日更新：" + (todayLog.description || "数据已更新")
+        : "今日已检查：无管线数据更新";
+      badge.textContent = changed ? "有更新" : "例行检查";
+      const detail = changed
+        ? todayLog.description || "数据已更新"
+        : todayLog.description || "例行检查完成";
+      meta.textContent = todayLog.date + " · " + updateTypeLabel(todayLog.type) + " · " + detail + " · " + formatDateTime(todayLog.updatedAt || data.meta.updatedAt);
+      return;
+    }
+
+    panel.classList.add("no-update");
+    title.textContent = "今日暂无更新";
+    badge.textContent = "待更新";
+    meta.textContent = latest
+      ? "上次更新：" + latest.date + " · " + updateTypeLabel(latest.type) + " · " + formatDateTime(latest.updatedAt || data.meta.updatedAt)
+      : "尚未生成更新记录";
   }
 
   function renderMetrics(data) {
@@ -453,18 +538,19 @@
   }
 
   function renderUpdateLog(data) {
-    const logs = (data.meta.updateLog || []).slice().sort((a, b) => String(b.date || "").localeCompare(String(a.date || ""))).slice(0, 20);
-    $id("updateLog").innerHTML = logs.map((log) => `
-      <div class="update-item">
-        <span class="update-date">${escapeHtml(log.date || "-")}</span>
-        <div class="update-description">
-          ${escapeHtml(log.description || "")}
-          <span class="milestone-source">${escapeHtml(log.type || "update")}</span>
-        </div>
-      </div>
-    `).join("") || '<div class="empty-state">暂无更新记录</div>';
+    const logs = (data.meta.updateLog || []).slice().sort(function (a, b) {
+      return String(b.date || "").localeCompare(String(a.date || ""));
+    }).slice(0, 20);
+    $id("updateLog").innerHTML = logs.map(function (log) {
+      const changed = logHasChanges(log);
+      const stateText = changed ? "有更新" : "无数据变更";
+      return '<div class="update-item ' + (changed ? "update-changed" : "update-checked") + '">' +
+        '<span class="update-date">' + escapeHtml(log.date || "-") + "</span>" +
+        '<div class="update-description">' + escapeHtml(log.description || (changed ? "数据已更新" : "例行检查，无数据变更")) +
+        '<span class="milestone-source">' + escapeHtml(updateTypeLabel(log.type)) + " · " + stateText + "</span>" +
+        "</div></div>";
+    }).join("") || '<div class="empty-state">暂无更新记录</div>';
   }
-
   function renderUpdaterList(data) {
     const pipeline = data.pipeline.slice().sort((a, b) => String(a.code || "").localeCompare(String(b.code || ""), "zh-CN"));
     $id("updaterCount").textContent = `${pipeline.length} 条`;
