@@ -2,7 +2,7 @@
   "meta": {
     "name": "PROTAC 全球研发管线追踪",
     "version": "2026-08-03",
-    "updatedAt": "2026-08-04T09:44:16+08:00",
+    "updatedAt": "2026-08-04T05:28:00+00:00",
     "lastChecked": "2026-08-04",
     "schedule": "每日更新一次或手动更新",
     "source": "公开资料汇编",
@@ -27,6 +27,11 @@
         "date": "2026-08-04",
         "type": "daily",
         "description": "今日更新"
+      },
+      {
+        "date": "2026-08-04",
+        "type": "daily",
+        "description": "每日例行检查"
       }
     ]
   },
